@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Notifications</title>
+</head>
+
+<body>
+    <h1>Chat Room</h1>
+    <button id="notification-btn" onclick="requestNotificationPermission()">Enable Notifications</button>
+    <div id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Enter your name">
+    <input type="text" id="message-input" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        let lastMessageId = 0;
+
+        // Request notification permission
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationBtn = document.getElementById('notification-btn');
+
+            // Check if notifications are already enabled
+            if (Notification.permission === 'granted') {
+                notificationBtn.style.display = 'none';
+            }
+        });
+
+        function requestNotificationPermission() {
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('Notifications enabled!');
+                    } else {
+                        alert('Notifications disabled!');
+                    }
+                });
+            } else {
+                alert('Notifications are already enabled.');
+            }
+        }
+
+        // Send message to the server
+        function sendMessage() {
+            const message = document.getElementById('message-input').value;
+            const user = document.getElementById('user-input').value || 'Anonymous';
+            fetch('/send_message/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: user, message: message })
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('message-input').value = '';
+                        fetchMessages();
+                    }
+                });
+        }
+
+        // Fetch new messages
+        function fetchMessages() {
+            fetch(`/fetch_messages/?last_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const chatBox = document.getElementById('chat-box');
+                    data.messages.forEach(msg => {
+                        const messageElement = document.createElement('div');
+                        messageElement.textContent = `${msg.user}: ${msg.message}`;
+                        chatBox.appendChild(messageElement);
+                        lastMessageId = msg.id;
+
+                        // Show browser notification
+                        if (Notification.permission === 'granted') {
+                            new Notification(`${msg.user}:`, { body: msg.message });
+                        }
+                    });
+                });
+        }
+
+        // Poll for new messages every 3 seconds
+        setInterval(fetchMessages, 3000);
+    </script>
+</body>
+
+</html>

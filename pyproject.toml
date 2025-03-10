@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "django chat"
+version = "0.1.0"
+description = ""
+authors = ["Joshua Olson <joshua.olson+github@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+Django = ">4.0"
+
+[tool.poetry.group.dev.dependencies]
+pillow = "^11.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
