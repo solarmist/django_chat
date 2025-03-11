@@ -1,8 +1,8 @@
 import json
 import re
 
-
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
@@ -20,22 +20,25 @@ class ChatRoomsView(View):
         return JsonResponse({"rooms": rooms_data})
 
 
-# Registration View
 class RegisterView(View):
+    def get(self, request):
+        form = UserCreationForm()
+        return render(request, "chat/register.html", {"form": form})
+
     def post(self, request):
-        data = json.loads(request.body)
-        username = data.get("username")
-        password = data.get("password")
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_user(username=username, password=password)
-            return JsonResponse({"status": "success"})
-        return JsonResponse(
-            {"status": "error", "message": "User already exists"}, status=400
-        )
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Log in the user after registration
+            return redirect("/")
+        return render(request, "chat/register.html", {"form": form})
 
 
 # Login View
 class LoginView(View):
+    def get(self, request):
+        return render(request, "chat/login.html")  # Ensure this template exists
+
     def post(self, request):
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -44,7 +47,9 @@ class LoginView(View):
             login(request, user)
             return redirect("/")
         else:
-            return render(request, "chat/chat.html", {"error": "Invalid credentials"})
+            return render(
+                request, "chat/login.html", {"error": "Invalid credentials"}
+            )  # Pass error if login fails
 
 
 # Logout View
