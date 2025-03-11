@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "./chat_project/static/js",
+    "rootDir": "./chat_project/static/ts",
+    "esModuleInterop": true
+  },
+  "include": [
+    "chat_project/static/ts"
+  ]
+}

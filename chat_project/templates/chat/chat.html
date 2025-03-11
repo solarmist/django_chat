@@ -1,0 +1,23 @@
+{% extends 'chat/base.html' %}
+
+{% block title %}Chat Room{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+    <div class="sidebar">
+        <h3>Select Room</h3>
+        <select id="room-select" multiple="multiple" onchange="changeRoom()">
+            <!-- Room options will be populated dynamically -->
+        </select>
+    </div>
+
+    <div class="chat-container">
+        <h2>Chat Room: <span id="current-room">General</span></h2>
+        <div id="chat-box" class="chat-box"></div>
+        <input type="text" id="message-input" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <button id="notification-btn" onclick="requestNotificationPermission()">Enable Notifications</button>
+</div>
+{% endblock %}
