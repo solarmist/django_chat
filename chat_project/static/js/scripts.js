@@ -17,6 +17,10 @@ function fetchChatRooms() {
             const response = yield fetch('/chatrooms/');
             const data = yield response.json();
             const roomSelect = document.getElementById('room-select');
+            if (!roomSelect) {
+                console.warn('roomSelect element not found');
+                return; // Stop if roomSelect is null
+            }
             // Clear existing room options
             roomSelect.innerHTML = '';
             // Populate the dropdown with chat rooms
@@ -55,7 +59,13 @@ function changeRoom(room) {
         const currentRoomElement = document.getElementById('current-room');
         currentRoomElement.textContent = currentRoom.charAt(0).toUpperCase() + currentRoom.slice(1);
         const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = ''; // Clear chat box
+        if (chatBox) {
+            chatBox.innerHTML = '';
+        }
+        else {
+            console.warn('chat-box element not found');
+            return; // Stop if chatBox is null
+        }
         lastMessageId = 0;
         fetchMessages();
     });
@@ -63,8 +73,11 @@ function changeRoom(room) {
 // Check if DOM is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
     const notificationBtn = document.getElementById('notification-btn');
-    if (Notification.permission === 'granted') {
-        notificationBtn.style.display = 'none';
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', requestNotificationPermission);
+        if (Notification.permission === 'granted') {
+            notificationBtn.style.display = 'none';
+        }
     }
 });
 function getCSRFToken() {
@@ -127,7 +140,7 @@ function logout() {
         }
     }).then(response => {
         if (response.ok) {
-            window.location.href = '/'; // Redirect to home if successful
+            window.location.href = '/login'; // Redirect to home if successful
         }
         else {
             console.error('Logout failed');
@@ -177,6 +190,10 @@ function fetchMessages() {
 document.addEventListener("DOMContentLoaded", fetchChatRooms);
 document.addEventListener("DOMContentLoaded", () => {
     const messageInput = document.getElementById('message-input');
+    if (!messageInput) {
+        console.warn('message-input element not found');
+        return; // Stop if messageInput is null
+    }
     if (messageInput) { // Check if the input exists
         messageInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
@@ -189,5 +206,10 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error('message-input element not found');
     }
 });
-// Poll for new messages every 3 seconds
-setInterval(fetchMessages, 3000);
+// Poll for new messages every 3 seconds, only if logged in
+if (document.getElementById('username')) {
+    setInterval(fetchMessages, 3000);
+}
+else {
+    console.log('User not logged in, stopping message polling.');
+}

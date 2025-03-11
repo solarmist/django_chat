@@ -19,7 +19,11 @@ async function fetchChatRooms(): Promise<void> {
     try {
         const response = await fetch('/chatrooms/');
         const data = await response.json();
-        const roomSelect = document.getElementById('room-select') as HTMLSelectElement;
+        const roomSelect = document.getElementById('room-select') as HTMLSelectElement | null;
+        if (!roomSelect) {
+            console.warn('roomSelect element not found');
+            return;  // Stop if roomSelect is null
+        }
 
         // Clear existing room options
         roomSelect.innerHTML = '';
@@ -61,8 +65,13 @@ async function changeRoom(room: string): Promise<void> {
     const currentRoomElement = document.getElementById('current-room')!;
     currentRoomElement.textContent = currentRoom.charAt(0).toUpperCase() + currentRoom.slice(1);
 
-    const chatBox = document.getElementById('chat-box') as HTMLDivElement;
-    chatBox.innerHTML = '';  // Clear chat box
+    const chatBox = document.getElementById('chat-box') as HTMLDivElement | null;
+    if (chatBox) {
+        chatBox.innerHTML = '';
+    } else {
+        console.warn('chat-box element not found');
+        return;  // Stop if chatBox is null
+    }
 
     lastMessageId = 0;
     fetchMessages();
@@ -71,9 +80,12 @@ async function changeRoom(room: string): Promise<void> {
 
 // Check if DOM is fully loaded
 document.addEventListener("DOMContentLoaded", () => {
-    const notificationBtn = document.getElementById('notification-btn') as HTMLButtonElement;
-    if (Notification.permission === 'granted') {
-        notificationBtn.style.display = 'none';
+    const notificationBtn = document.getElementById('notification-btn') as HTMLButtonElement | null;
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', requestNotificationPermission);
+        if (Notification.permission === 'granted') {
+            notificationBtn.style.display = 'none';
+        }
     }
 });
 
@@ -140,7 +152,7 @@ function logout(): void {
         }
     }).then(response => {
         if (response.ok) {
-            window.location.href = '/';  // Redirect to home if successful
+            window.location.href = '/login';  // Redirect to home if successful
         } else {
             console.error('Logout failed');
         }
@@ -194,6 +206,10 @@ function fetchMessages(): void {
 document.addEventListener("DOMContentLoaded", fetchChatRooms);
 document.addEventListener("DOMContentLoaded", () => {
     const messageInput = document.getElementById('message-input') as HTMLInputElement | null;
+    if (!messageInput) {
+        console.warn('message-input element not found');
+        return;  // Stop if messageInput is null
+    }
 
     if (messageInput) {  // Check if the input exists
         messageInput.addEventListener('keydown', (event: KeyboardEvent) => {
@@ -206,5 +222,10 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error('message-input element not found');
     }
 });
-// Poll for new messages every 3 seconds
-setInterval(fetchMessages, 3000);
+
+// Poll for new messages every 3 seconds, only if logged in
+if (document.getElementById('username')) {
+    setInterval(fetchMessages, 3000);
+} else {
+    console.log('User not logged in, stopping message polling.');
+}
