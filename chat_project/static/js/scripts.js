@@ -119,6 +119,23 @@ function login() {
         }
     });
 }
+function logout() {
+    fetch('/logout/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken() || '' // Include CSRF token for security
+        }
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '/'; // Redirect to home if successful
+        }
+        else {
+            console.error('Logout failed');
+        }
+    }).catch(error => {
+        console.error('Error during logout:', error);
+    });
+}
 // Send message to server
 function sendMessage() {
     const message = document.getElementById('message-input').value;
@@ -147,14 +164,30 @@ function fetchMessages() {
             messageElement.textContent = `${msg.user}: ${msg.message}`;
             chatBox.appendChild(messageElement);
             lastMessageId = msg.id;
-            // Show notification if @mentioned
-            const username = document.getElementById('username').value;
-            if (msg.message.includes(`@${username}`) && Notification.permission === 'granted') {
+            // Safely get username if logged in
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput ? usernameInput.value : null;
+            // Show notification if @mentioned and username is available
+            if (username && msg.message.includes(`@${username}`) && Notification.permission === 'granted') {
                 new Notification(`${msg.user}:`, { body: msg.message });
             }
         });
     });
 }
 document.addEventListener("DOMContentLoaded", fetchChatRooms);
+document.addEventListener("DOMContentLoaded", () => {
+    const messageInput = document.getElementById('message-input');
+    if (messageInput) { // Check if the input exists
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Stop default Enter behavior (like form submission)
+                sendMessage(); // Call sendMessage function
+            }
+        });
+    }
+    else {
+        console.error('message-input element not found');
+    }
+});
 // Poll for new messages every 3 seconds
 setInterval(fetchMessages, 3000);

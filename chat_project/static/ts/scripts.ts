@@ -132,6 +132,23 @@ function login(): void {
         });
 }
 
+function logout(): void {
+    fetch('/logout/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken() || ''  // Include CSRF token for security
+        }
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '/';  // Redirect to home if successful
+        } else {
+            console.error('Logout failed');
+        }
+    }).catch(error => {
+        console.error('Error during logout:', error);
+    });
+}
+
 // Send message to server
 function sendMessage(): void {
     const message = (document.getElementById('message-input') as HTMLInputElement).value;
@@ -163,9 +180,11 @@ function fetchMessages(): void {
                 chatBox.appendChild(messageElement);
                 lastMessageId = msg.id;
 
-                // Show notification if @mentioned
-                const username = (document.getElementById('username') as HTMLInputElement).value;
-                if (msg.message.includes(`@${username}`) && Notification.permission === 'granted') {
+                // Safely get username if logged in
+                const usernameInput = document.getElementById('username') as HTMLInputElement | null;
+                const username = usernameInput ? usernameInput.value : null;
+                // Show notification if @mentioned and username is available
+                if (username && msg.message.includes(`@${username}`) && Notification.permission === 'granted') {
                     new Notification(`${msg.user}:`, { body: msg.message });
                 }
             });
@@ -173,6 +192,19 @@ function fetchMessages(): void {
 }
 
 document.addEventListener("DOMContentLoaded", fetchChatRooms);
+document.addEventListener("DOMContentLoaded", () => {
+    const messageInput = document.getElementById('message-input') as HTMLInputElement | null;
 
+    if (messageInput) {  // Check if the input exists
+        messageInput.addEventListener('keydown', (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();  // Stop default Enter behavior (like form submission)
+                sendMessage();           // Call sendMessage function
+            }
+        });
+    } else {
+        console.error('message-input element not found');
+    }
+});
 // Poll for new messages every 3 seconds
 setInterval(fetchMessages, 3000);

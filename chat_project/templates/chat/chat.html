@@ -4,8 +4,22 @@
 
 {% block content %}
 <div class="chat-layout">
+    {% if not request.user.is_authenticated %}
+    <div class="login-container">
+        <h2>Login</h2>
+        <form method="post" action="/login/">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="/register/">Register here</a></p>
+    </div>
+    {% else %}
 
-    <div class="sidebar">
+    <input type="hidden" id="username" value="{{ request.user.username }}">
+
+    <div class="room-list-container">
         <h3>Select Room</h3>
         <select id="room-select" multiple="multiple" onchange="changeRoom()">
             <!-- Room options will be populated dynamically -->
@@ -19,5 +33,7 @@
         <button onclick="sendMessage()">Send</button>
     </div>
     <button id="notification-btn" onclick="requestNotificationPermission()">Enable Notifications</button>
+    <button onclick="logout()">Logout</button>
+    {% endif %}
 </div>
 {% endblock %}

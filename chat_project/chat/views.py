@@ -4,7 +4,7 @@ import re
 
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -37,16 +37,14 @@ class RegisterView(View):
 # Login View
 class LoginView(View):
     def post(self, request):
-        data = json.loads(request.body)
-        username = data.get("username")
-        password = data.get("password")
-        user = authenticate(username=username, password=password)
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return JsonResponse({"status": "success"})
-        return JsonResponse(
-            {"status": "error", "message": "Invalid credentials"}, status=400
-        )
+            return redirect("/")
+        else:
+            return render(request, "chat/chat.html", {"error": "Invalid credentials"})
 
 
 # Logout View
